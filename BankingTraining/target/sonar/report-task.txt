@@ -1,7 +1,0 @@
-organization=polakujoshikasree
-projectKey=PolakuJoshikaSree_CHubbTraining
-serverUrl=https://sonarcloud.io
-serverVersion=8.0.0.76401
-dashboardUrl=https://sonarcloud.io/dashboard?id=PolakuJoshikaSree_CHubbTraining
-ceTaskId=AZph8W4pdPhfm6wUKJOs
-ceTaskUrl=https://sonarcloud.io/api/ce/task?id=AZph8W4pdPhfm6wUKJOs
