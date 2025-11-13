@@ -1,0 +1,56 @@
+# Compiled class files
+*.class
+
+# Jar/War/Ear files
+*.jar
+*.war
+*.ear
+
+# Maven build artifacts
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/wrapper/maven-wrapper.jar
+.mvn/wrapper/maven-wrapper.properties
+
+# Gradle build artifacts
+.gradle/
+build/
+out/
+
+# Eclipse-specific files
+.project
+.classpath
+.settings/
+*.launch
+.metadata
+
+# IntelliJ IDEA-specific files
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# NetBeans-specific files
+nbproject/private/
+build/
+nbbuild/
+dist/
+.nb-gradle/
+.cachedir/
+*.orig
+*.rej
+*.bak
+*.swp
+*.swo
+
+# Temporary files
+*~
+*.log
+*.tmp
+temp/
