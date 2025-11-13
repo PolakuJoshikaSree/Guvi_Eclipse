@@ -1,0 +1,62 @@
+package com.training1311;
+
+public class Book {
+
+    private int bookId;
+    private String title;
+    private String author;
+    private String publisher;
+    private String genre;
+    private double price;
+    private int pages;
+
+    public Book(int bookId, String title, String author,String publisher, String genre, double price, int pages) {
+
+        this.bookId = bookId;
+        this.title = title;
+        this.author = author;
+        this.publisher = publisher;
+        this.genre = genre;
+        this.price = price;
+        this.pages = pages;
+    }
+
+    public int getBookId() {
+        return bookId;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public String getAuthor() {
+        return author;
+    }
+
+    public String getPublisher() {
+        return publisher;
+    }
+
+    public String getGenre() {
+        return genre;
+    }
+
+    public double getPrice() {
+        return price;
+    }
+
+    public int getPages() {
+        return pages;
+    }
+
+    public void showBook() {
+        System.out.println("Book ID     : " + bookId);
+        System.out.println("Title       : " + title);
+        System.out.println("Author      : " + author);
+        System.out.println("Publisher   : " + publisher);
+        System.out.println("Genre       : " + genre);
+        System.out.println("Price       : " + price);
+        System.out.println("Pages       : " + pages);
+        System.out.println();
+    }
+}
