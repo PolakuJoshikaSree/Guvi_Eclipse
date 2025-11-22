@@ -1,0 +1,6 @@
+INFO - Application started
+INFO - User logged in
+ERROR - Database connection failed
+WARN - Low memory
+INFO - Operation successful
+ERROR - Timeout occurred

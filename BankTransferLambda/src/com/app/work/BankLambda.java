@@ -1,0 +1,47 @@
+package com.app.work;
+
+class Account {
+    private int balance;
+
+    public Account(int balance) {
+        this.balance = balance;
+    }
+
+    public synchronized void withdraw(int amount) {
+        if (amount <= 0) {
+            System.out.println("Invalid amount, withdrawal must be positive.");
+            return;
+        }
+
+        if (balance >= amount) {
+            System.out.println(Thread.currentThread().getName() + " is withdrawing " + amount);
+            try { Thread.sleep(100); } catch (InterruptedException e) {}
+            balance -= amount;
+            System.out.println(Thread.currentThread().getName() + " completed withdrawal. Balance: " + balance);
+        } else {
+            System.out.println(Thread.currentThread().getName() + " tried withdrawing " + amount + " but insufficient balance");
+        }
+    }
+
+    public int getBalance() {
+        return balance;
+    }
+}
+
+public class BankLambda {
+    public static void main(String[] args) throws InterruptedException {
+
+        Account acc = new Account(1000);
+
+        Thread t1 = new Thread(() -> acc.withdraw(700), "User-1");
+        Thread t2 = new Thread(() -> acc.withdraw(700), "User-2");
+
+        t1.start();
+        t2.start();
+
+        t1.join();
+        t2.join();
+
+        System.out.println("Final Balance: " + acc.getBalance());
+    }
+}
