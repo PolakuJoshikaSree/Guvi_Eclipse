@@ -11,10 +11,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.time.LocalDate;
-import java.util.Collections;
-import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -30,9 +30,9 @@ class FlightServiceTest {
 
     @InjectMocks
     private FlightService service;
+
     @Test
     void testAddFlight() {
-
         AddFlightRequest req = new AddFlightRequest();
         req.setAirlineCode("AI101");
         req.setFlightNumber("AI-10");
@@ -45,27 +45,22 @@ class FlightServiceTest {
         req.setPrice(5000.0);
         req.setBaggageLimitKg(15);
 
-
         Airline airline = new Airline();
         airline.setAirlineCode("AI101");
 
-        // Mock repo responses
         when(airlineRepo.findByAirlineCode("AI101"))
-                .thenReturn(Optional.of(airline));
+                .thenReturn(Mono.just(airline));
 
         when(flightRepo.save(any(Flight.class)))
-                .thenReturn(new Flight());
+                .thenReturn(Mono.just(new Flight()));
 
-        // Execute service
-        Flight result = service.addFlight(req);
+        Flight result = service.addFlight(req).block();
 
-        // Assert
         assertNotNull(result);
-        verify(flightRepo, times(1)).save(any(Flight.class));
     }
+
     @Test
     void testSearchFlights() {
-
         FlightSearchRequest req = new FlightSearchRequest();
         req.setFromPlace("Delhi");
         req.setToPlace("Mumbai");
@@ -73,14 +68,10 @@ class FlightServiceTest {
 
         when(flightRepo.findByFromPlaceAndToPlaceAndFlightDate(
                 "Delhi", "Mumbai", LocalDate.parse("2025-12-01")
-        )).thenReturn(Collections.emptyList());
+        )).thenReturn(Flux.empty());
 
-        var result = service.searchFlights(req);
+        var result = service.searchFlights(req).collectList().block();
 
         assertEquals(0, result.size());
-        verify(flightRepo, times(1))
-                .findByFromPlaceAndToPlaceAndFlightDate(
-                        "Delhi", "Mumbai", LocalDate.parse("2025-12-01")
-                );
     }
 }

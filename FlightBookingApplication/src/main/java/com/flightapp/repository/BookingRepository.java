@@ -1,14 +1,13 @@
 package com.flightapp.repository;
 
 import com.flightapp.model.Booking;
-import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.repository.reactive.ReactiveCrudRepository;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
-import java.util.Optional;
-import java.util.List;
+public interface BookingRepository extends ReactiveCrudRepository<Booking, Long> {
 
-public interface BookingRepository extends JpaRepository<Booking, Long> {
+    Mono<Booking> findByPnr(String pnr);
 
-    Optional<Booking> findByPnr(String pnr);
-
-    List<Booking> findByEmailOrderByBookingTimeDesc(String email);
+    Flux<Booking> findByEmailOrderByBookingTimeDesc(String email);
 }

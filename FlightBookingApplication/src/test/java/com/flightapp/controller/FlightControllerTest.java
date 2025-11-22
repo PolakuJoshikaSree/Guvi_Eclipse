@@ -9,6 +9,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.util.List;
 
@@ -16,7 +18,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-public class FlightControllerTest {
+class FlightControllerTest {
 
     @Mock
     private FlightService service;
@@ -32,9 +34,9 @@ public class FlightControllerTest {
         Flight mock = new Flight();
         mock.setFlightNumber("AI101");
 
-        when(service.addFlight(req)).thenReturn(mock);
+        when(service.addFlight(req)).thenReturn(Mono.just(mock));
 
-        Flight result = controller.addFlight(req);
+        Flight result = controller.addFlight(req).block();
 
         assertEquals("AI101", result.getFlightNumber());
         verify(service, times(1)).addFlight(req);
@@ -48,9 +50,9 @@ public class FlightControllerTest {
         req.setFlightDate("2025-01-10");
 
         when(service.searchFlights(req))
-                .thenReturn(List.of(new Flight(), new Flight()));
+                .thenReturn(Flux.just(new Flight(), new Flight()));
 
-        List<Flight> flights = controller.search(req);
+        List<Flight> flights = controller.searchFlights(req).collectList().block();
 
         assertEquals(2, flights.size());
     }

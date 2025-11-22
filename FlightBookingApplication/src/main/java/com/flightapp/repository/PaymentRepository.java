@@ -1,8 +1,7 @@
 package com.flightapp.repository;
 
 import com.flightapp.model.Payment;
-import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.repository.reactive.ReactiveCrudRepository;
 
-public interface PaymentRepository extends JpaRepository<Payment, Long> {
-
+public interface PaymentRepository extends ReactiveCrudRepository<Payment, Long> {
 }

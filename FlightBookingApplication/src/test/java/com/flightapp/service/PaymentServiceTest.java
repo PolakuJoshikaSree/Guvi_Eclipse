@@ -9,6 +9,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import reactor.core.publisher.Mono;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -28,14 +29,18 @@ class PaymentServiceTest {
     @Test
     void testPay() {
         Booking booking = new Booking();
-        when(bookingService.getBooking("PNR123")).thenReturn(booking);
-        when(paymentRepo.save(any(Payment.class))).thenReturn(new Payment());
+
+        when(bookingService.getBooking("PNR123"))
+                .thenReturn(Mono.just(booking));
+
+        when(paymentRepo.save(any(Payment.class)))
+                .thenReturn(Mono.just(new Payment()));
 
         PaymentRequest req = new PaymentRequest();
         req.setAmount(5000);
         req.setPaymentMode("UPI");
 
-        Payment result = service.pay("PNR123", req);
+        Payment result = service.pay("PNR123", req).block();
 
         assertNotNull(result);
         verify(paymentRepo, times(1)).save(any(Payment.class));

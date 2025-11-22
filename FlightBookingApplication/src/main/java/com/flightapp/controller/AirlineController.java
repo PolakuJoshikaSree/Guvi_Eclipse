@@ -3,36 +3,46 @@ package com.flightapp.controller;
 import com.flightapp.model.Airline;
 import com.flightapp.request.AddAirlineRequest;
 import com.flightapp.service.AirlineService;
-import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("/api/airlines")
 public class AirlineController {
 
     private final AirlineService service;
 
-    public AirlineController(AirlineService service) {
-        this.service = service;
-    }
-
-    // ADD A NEW AIRLINE
     @PostMapping("/add")
-    public Airline addAirline(@Valid @RequestBody AddAirlineRequest request) {
-        return service.addAirline(request);
+    public Mono<Airline> add(@RequestBody AddAirlineRequest req) {
+        return service.addAirline(req);
     }
 
-    // GET ALL AIRLINES
     @GetMapping("/all")
-    public List<Airline> getAll() {
+    public Flux<Airline> all() {
         return service.getAll();
     }
 
-    // GET AIRLINE BY CODE
     @GetMapping("/{code}")
-    public Airline getByCode(@PathVariable String code) {
+    public Mono<Airline> getByCode(@PathVariable String code) {
         return service.getAirlineByCode(code);
+    }
+
+    @PutMapping("/update/{code}")
+    public Mono<Airline> update(@PathVariable String code,
+                                @RequestBody AddAirlineRequest request) {
+        return service.updateAirline(code, request);
+    }
+
+    @DeleteMapping("/{code}")
+    public Mono<Void> deleteByCode(@PathVariable String code) {
+        return service.deleteAirline(code);
+    }
+
+    @DeleteMapping("/id/{id}")
+    public Mono<Void> deleteById(@PathVariable Long id) {
+        return service.deleteAirlineById(id);
     }
 }

@@ -1,37 +1,40 @@
 package com.flightapp.service;
 
-import com.flightapp.model.Booking;
 import com.flightapp.model.Payment;
 import com.flightapp.model.enums.PaymentStatus;
 import com.flightapp.repository.PaymentRepository;
 import com.flightapp.request.PaymentRequest;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Mono;
 
 import java.time.LocalDateTime;
 
 @Service
+@RequiredArgsConstructor
 public class PaymentService {
 
     private final BookingService bookingService;
-    private final PaymentRepository paymentRepository;
+    private final PaymentRepository repo;
 
-    public PaymentService(BookingService bookingService,
-                          PaymentRepository paymentRepository) {
-        this.bookingService = bookingService;
-        this.paymentRepository = paymentRepository;
+    public Mono<Payment> pay(String pnr, PaymentRequest req) {
+        return bookingService.getBooking(pnr)
+                .flatMap(booking -> {
+                    Payment p = new Payment();
+                    p.setAmount(req.getAmount());
+                    p.setPaymentMode(req.getPaymentMode());
+                    p.setPaymentTime(LocalDateTime.now());
+                    p.setStatus(PaymentStatus.SUCCESS.name()); // FIXED
+                    p.setBookingId(booking.getId());
+                    return repo.save(p);
+                });
     }
 
-    public Payment pay(String pnr, PaymentRequest req) {
+    public Mono<Payment> getPayment(Long id) {
+        return repo.findById(id);
+    }
 
-        Booking booking = bookingService.getBooking(pnr);
-
-        Payment payment = new Payment();
-        payment.setAmount(req.getAmount());
-        payment.setPaymentMode(req.getPaymentMode());
-        payment.setPaymentTime(LocalDateTime.now());
-        payment.setStatus(PaymentStatus.SUCCESS);
-        payment.setBooking(booking);
-
-        return paymentRepository.save(payment);
+    public Mono<Void> deletePayment(Long id) {
+        return repo.deleteById(id);
     }
 }

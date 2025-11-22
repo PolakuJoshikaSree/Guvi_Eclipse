@@ -1,62 +1,88 @@
 package com.flightapp.service;
 
-import com.flightapp.model.Airline;
 import com.flightapp.model.Flight;
-import com.flightapp.repository.AirlineRepository;
-import com.flightapp.repository.FlightRepository;
 import com.flightapp.request.AddFlightRequest;
 import com.flightapp.request.FlightSearchRequest;
+import com.flightapp.repository.AirlineRepository;
+import com.flightapp.repository.FlightRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class FlightService {
 
-    private final FlightRepository flightRepo;
+    private final FlightRepository repo;
     private final AirlineRepository airlineRepo;
 
-    public FlightService(FlightRepository flightRepo, AirlineRepository airlineRepo) {
-        this.flightRepo = flightRepo;
-        this.airlineRepo = airlineRepo;
+    public Mono<Flight> addFlight(AddFlightRequest req) {
+
+        return airlineRepo.findByAirlineCode(req.getAirlineCode())
+                .flatMap(airline -> {
+
+                    Flight f = new Flight();
+                    f.setFlightNumber(req.getFlightNumber());
+                    f.setFromPlace(req.getFromPlace());
+                    f.setToPlace(req.getToPlace());
+                    f.setFlightDate(LocalDate.parse(req.getFlightDate()));
+                    f.setDepartureTime(LocalTime.parse(req.getDepartureTime()));
+                    f.setArrivalTime(LocalTime.parse(req.getArrivalTime()));
+                    f.setTotalSeats(req.getTotalSeats());
+                    f.setBookedSeats(0);
+                    f.setPrice(req.getPrice());
+                    f.setBaggageLimitKg(req.getBaggageLimitKg());
+                    f.setAirlineCode(airline.getAirlineCode());
+
+                    return repo.save(f);
+                });
     }
-
-    public Flight addFlight(AddFlightRequest req) {
-
-        Airline airline = airlineRepo.findByAirlineCode(req.getAirlineCode())
-                .orElseThrow(() -> new RuntimeException("Airline not found with code : " + req.getAirlineCode()));
-
-        Flight f = new Flight();
-        f.setFlightNumber(req.getFlightNumber());
-        f.setFromPlace(req.getFromPlace());
-        f.setToPlace(req.getToPlace());
-        f.setFlightDate(LocalDate.parse(req.getFlightDate()));
-        f.setDepartureTime(LocalTime.parse(req.getDepartureTime()));
-        f.setArrivalTime(LocalTime.parse(req.getArrivalTime()));
-        f.setTotalSeats(req.getTotalSeats());
-        f.setBookedSeats(0);
-        f.setPrice(req.getPrice());
-        f.setBaggageLimitKg(req.getBaggageLimitKg());
-        f.setAirline(airline);
-
-        return flightRepo.save(f);
-    }
-
-    public List<Flight> searchFlights(FlightSearchRequest request) {
-        LocalDate date = LocalDate.parse(request.getFlightDate()); // Convert String → LocalDate
-
-        return flightRepo.findByFromPlaceAndToPlaceAndFlightDate(
-                request.getFromPlace(),
-                request.getToPlace(),
-                date
+    public Flux<Flight> searchFlights(FlightSearchRequest req) {
+        return repo.findByFromPlaceAndToPlaceAndFlightDate(
+                req.getFromPlace(),
+                req.getToPlace(),
+                LocalDate.parse(req.getFlightDate())
         );
     }
 
-    public Flight getFlightById(Long id) {
-        return flightRepo.findById(id)
-                .orElseThrow(() -> new RuntimeException("Flight not found"));
+
+    public Mono<Flight> getFlightById(Long id) {
+        return repo.findById(id);
+    }
+
+
+    public Mono<Flight> updateFlight(Long id, AddFlightRequest req) {
+        return repo.findById(id)
+                .flatMap(existing -> {
+                    existing.setFlightNumber(req.getFlightNumber());
+                    existing.setFromPlace(req.getFromPlace());
+                    existing.setToPlace(req.getToPlace());
+                    existing.setFlightDate(LocalDate.parse(req.getFlightDate()));
+                    existing.setDepartureTime(LocalTime.parse(req.getDepartureTime()));
+                    existing.setArrivalTime(LocalTime.parse(req.getArrivalTime()));
+                    existing.setTotalSeats(req.getTotalSeats());
+                    existing.setPrice(req.getPrice());
+                    existing.setBaggageLimitKg(req.getBaggageLimitKg());
+                    return repo.save(existing);
+                });
+    }
+
+
+    public Mono<Void> deleteFlight(Long id) {
+        return repo.deleteById(id);
+    }
+
+
+    public Mono<Void> updateSeatCount(Long flightId, int seatsToBook) {
+        return repo.findById(flightId)
+                .flatMap(flight -> {
+                    flight.setBookedSeats(flight.getBookedSeats() + seatsToBook);
+                    return repo.save(flight);
+                })
+                .then(); 
     }
 }
-

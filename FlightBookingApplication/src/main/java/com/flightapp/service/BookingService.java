@@ -2,78 +2,78 @@ package com.flightapp.service;
 
 import com.flightapp.model.Booking;
 import com.flightapp.model.Passenger;
-import com.flightapp.model.Flight;
 import com.flightapp.model.enums.BookingStatus;
 import com.flightapp.repository.BookingRepository;
 import com.flightapp.repository.PassengerRepository;
 import com.flightapp.request.BookingRequest;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import reactor.core.publisher.Mono;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Service
+@RequiredArgsConstructor
 public class BookingService {
 
     private final BookingRepository bookingRepo;
     private final PassengerRepository passengerRepo;
     private final FlightService flightService;
 
-    public BookingService(BookingRepository bookingRepo,
-                          PassengerRepository passengerRepo,
-                          FlightService flightService) {
-        this.bookingRepo = bookingRepo;
-        this.passengerRepo = passengerRepo;
-        this.flightService = flightService;
+    public Mono<Booking> book(Long flightId, BookingRequest req) {
+        return flightService.getFlightById(flightId)
+                .flatMap(flight -> {
+
+                    Booking b = new Booking();
+                    b.setPnr(UUID.randomUUID().toString().substring(0, 8).toUpperCase());
+                    b.setEmail(req.getEmail());
+                    b.setPrimaryPassenger(req.getPrimaryPassenger());
+                    b.setSeatsBooked(req.getSeats());
+                    b.setBookingTime(LocalDateTime.now());
+                    b.setStatus(BookingStatus.CONFIRMED.name());   // FIXED
+                    b.setFlightId(flightId);
+
+                    return bookingRepo.save(b)
+                            .flatMap(saved ->
+                                    passengerRepo.saveAll(
+                                            req.getPassengers()
+                                                    .stream()
+                                                    .map(p -> {
+                                                        Passenger ps = new Passenger();
+                                                        ps.setPassengerName(p.getName());
+                                                        ps.setAge(p.getAge());
+                                                        ps.setGender(p.getGender().name()); // FIXED
+                                                        ps.setMealPreference(
+                                                                p.getMealPreference() != null
+                                                                        ? p.getMealPreference().name()
+                                                                        : null
+                                                        );
+                                                        ps.setLuggageWeight(p.getLuggageWeight());
+                                                        ps.setBookingId(saved.getId());
+                                                        return ps;
+                                                    })
+                                                    .toList()
+                                    ).then(Mono.just(saved))
+                            );
+                });
     }
 
-    @Transactional
-    public Booking book(Long flightId, BookingRequest req) {
-
-        Flight flight = flightService.getFlightById(flightId);
-
-        if (flight.getAvailableSeats() < req.getSeats()) {
-            throw new RuntimeException("Not enough seats");
-        }
-
-        Booking booking = new Booking();
-        booking.setPnr(UUID.randomUUID().toString().substring(0, 8).toUpperCase());
-        booking.setEmail(req.getEmail());
-        booking.setPrimaryPassenger(req.getPrimaryPassenger());
-        booking.setSeatsBooked(req.getSeats());
-        booking.setBookingTime(LocalDateTime.now());
-        booking.setStatus(BookingStatus.CONFIRMED);
-        booking.setFlight(flight);
-
-        bookingRepo.save(booking);
-
-        // save passengers
-        req.getPassengers().forEach(p -> {
-            Passenger ps = new Passenger();
-            ps.setPassengerName(p.getName());
-            ps.setGender(p.getGender());
-            ps.setAge(p.getAge());
-            ps.setLuggageWeight(p.getLuggageWeight());
-            ps.setMealPreference(p.getMealPreference());
-            ps.setBooking(booking);
-            passengerRepo.save(ps);
-        });
-
-        // update seats
-        flight.setBookedSeats(flight.getBookedSeats() + req.getSeats());
-
-        return booking;
+    public Mono<Booking> getBooking(String pnr) {
+        return bookingRepo.findByPnr(pnr);
     }
 
-    public Booking getBooking(String pnr) {
+    public Mono<Void> cancelBooking(String pnr) {
         return bookingRepo.findByPnr(pnr)
-                .orElseThrow(() -> new RuntimeException("PNR not found"));
+                .flatMap(b -> {
+                    b.setStatus(BookingStatus.CANCELLED.name()); // FIXED
+                    return bookingRepo.save(b);
+                })
+                .then();
     }
 
-    public void cancelBooking(String pnr) {
-        Booking b = getBooking(pnr);
-        b.setStatus(BookingStatus.CANCELLED);
-        bookingRepo.save(b);
+    public Mono<Void> deleteBooking(String pnr) {
+        return bookingRepo.findByPnr(pnr)
+                .flatMap(bookingRepo::delete);
     }
 }

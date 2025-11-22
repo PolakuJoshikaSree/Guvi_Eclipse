@@ -1,11 +1,16 @@
 package com.flightapp.repository;
 
 import com.flightapp.model.Flight;
-import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.repository.reactive.ReactiveCrudRepository;
+import reactor.core.publisher.Flux;
 
 import java.time.LocalDate;
-import java.util.List;
 
-public interface FlightRepository extends JpaRepository<Flight, Long> {
-    List<Flight> findByFromPlaceAndToPlaceAndFlightDate(String fromPlace, String toPlace, LocalDate flightDate);
+public interface FlightRepository extends ReactiveCrudRepository<Flight, Long> {
+
+    Flux<Flight> findByFromPlaceAndToPlaceAndFlightDate(
+            String fromPlace,
+            String toPlace,
+            LocalDate flightDate
+    );
 }

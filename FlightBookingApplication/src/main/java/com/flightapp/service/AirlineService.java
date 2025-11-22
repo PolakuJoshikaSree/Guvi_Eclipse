@@ -1,42 +1,50 @@
 package com.flightapp.service;
 
-import com.flightapp.exception.ResourceNotFoundException;
 import com.flightapp.model.Airline;
 import com.flightapp.repository.AirlineRepository;
 import com.flightapp.request.AddAirlineRequest;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 @Service
+@RequiredArgsConstructor
 public class AirlineService {
 
     private final AirlineRepository repo;
 
-    public AirlineService(AirlineRepository repo) {
-        this.repo = repo;
+    public Mono<Airline> addAirline(AddAirlineRequest req) {
+        Airline a = new Airline();
+        a.setAirlineName(req.getAirlineName());
+        a.setAirlineCode(req.getAirlineCode());
+        a.setCountry(req.getCountry());
+        return repo.save(a);
     }
 
-    // ADD AIRLINE
-    public Airline addAirline(AddAirlineRequest request) {
-
-        Airline airline = new Airline();
-        airline.setAirlineName(request.getAirlineName());
-        airline.setAirlineCode(request.getAirlineCode());
-        airline.setCountry(request.getCountry());
-
-        return repo.save(airline);
-    }
-
-    // GET ALL AIRLINES
-    public List<Airline> getAll() {
+    public Flux<Airline> getAll() {
         return repo.findAll();
     }
 
-    // GET AIRLINE BY CODE
-    public Airline getAirlineByCode(String code) {
+    public Mono<Airline> getAirlineByCode(String code) {
+        return repo.findByAirlineCode(code);
+    }
+
+    public Mono<Airline> updateAirline(String code, AddAirlineRequest req) {
         return repo.findByAirlineCode(code)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException("Airline not found with code: " + code));
+                .flatMap(existing -> {
+                    existing.setAirlineName(req.getAirlineName());
+                    existing.setCountry(req.getCountry());
+                    return repo.save(existing);
+                });
+    }
+
+    public Mono<Void> deleteAirline(String code) {
+        return repo.findByAirlineCode(code)
+                .flatMap(repo::delete);
+    }
+
+    public Mono<Void> deleteAirlineById(Long id) {
+        return repo.deleteById(id);
     }
 }

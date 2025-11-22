@@ -1,12 +1,12 @@
 package com.flightapp.repository;
 
 import com.flightapp.model.Seat;
-import com.flightapp.model.enums.SeatStatus;
-import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.repository.reactive.ReactiveCrudRepository;
+import reactor.core.publisher.Flux;
 
-import java.util.List;
+public interface SeatRepository extends ReactiveCrudRepository<Seat, Long> {
 
-public interface SeatRepository extends JpaRepository<Seat, Long> {
+    Flux<Seat> findByFlightId(Long flightId);
 
-    List<Seat> findByFlightIdAndStatus(Long flightId, SeatStatus status);
+    Flux<Seat> findByFlightIdAndStatus(Long flightId, String status);
 }

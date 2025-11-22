@@ -8,12 +8,13 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import reactor.core.publisher.Mono;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-public class BookingControllerTest {
+class BookingControllerTest {
 
     @Mock
     private BookingService service;
@@ -28,14 +29,14 @@ public class BookingControllerTest {
         req.setSeats(2);
         req.setPrimaryPassenger("John");
 
-        Booking mockBooking = new Booking();
-        mockBooking.setPnr("ABC123");
+        Booking mock = new Booking();
+        mock.setPnr("ABC123");
 
-        when(service.book(1L, req)).thenReturn(mockBooking);
+        when(service.book(1L, req)).thenReturn(Mono.just(mock));
 
-        Booking b = controller.book(1L, req);
+        Booking result = controller.book(1L, req).block();
 
-        assertEquals("ABC123", b.getPnr());
+        assertEquals("ABC123", result.getPnr());
     }
 
     @Test
@@ -43,19 +44,19 @@ public class BookingControllerTest {
         Booking b = new Booking();
         b.setPnr("XYZ789");
 
-        when(service.getBooking("XYZ789")).thenReturn(b);
+        when(service.getBooking("XYZ789")).thenReturn(Mono.just(b));
 
-        Booking result = controller.get("XYZ789");
+        Booking result = controller.getBooking("XYZ789").block();
 
         assertEquals("XYZ789", result.getPnr());
     }
 
     @Test
     void testCancelBooking() {
-        String msg = controller.cancel("PNR123");
+        when(service.cancelBooking("PNR123")).thenReturn(Mono.empty());
+
+        controller.cancelBooking("PNR123").block();
 
         verify(service, times(1)).cancelBooking("PNR123");
-
-        assertEquals("Booking cancelled.", msg);
     }
 }

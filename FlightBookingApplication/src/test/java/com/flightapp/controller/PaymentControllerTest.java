@@ -8,6 +8,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import reactor.core.publisher.Mono;
 
 import java.time.LocalDateTime;
 
@@ -15,7 +16,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-public class PaymentControllerTest {
+class PaymentControllerTest {
 
     @Mock
     private PaymentService service;
@@ -33,12 +34,11 @@ public class PaymentControllerTest {
         pay.setAmount(5000);
         pay.setPaymentTime(LocalDateTime.now());
 
-        when(service.pay("ABC123", req)).thenReturn(pay);
+        when(service.pay("ABC123", req)).thenReturn(Mono.just(pay));
 
-        Payment result = controller.pay("ABC123", req);
+        Payment result = controller.pay("ABC123", req).block();
 
         assertEquals(5000, result.getAmount());
         verify(service, times(1)).pay("ABC123", req);
     }
 }
-
